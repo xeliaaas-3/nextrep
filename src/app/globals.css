@@ -1,26 +1,314 @@
 @import "tailwindcss";
 
+/*
+ * Sistema visual "High-Velocity Athletic Utility".
+ *
+ * Los valores salen de docs/DESIGN.md. La idea de fondo: la pantalla no es un
+ * muro de contenido, es un panel de instrumentos. Carbón que absorbe la luz
+ * para que el púrpura de marca mande la atención sin competencia, y contraste
+ * por capas planas en vez de sombras difusas, que en un gimnasio no se ven.
+ *
+ * El modo oscuro es el valor por defecto. El claro se activa con
+ * `data-theme="light"` en la raíz, que es lo que hace `ArranqueApp`.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /*
+   * Superficies: cada nivel es un plano sólido, no una sombra. El carbón
+   * lleva una pizca de violeta para que el púrpura de marca no flote encima
+   * de un gris ajeno.
+   */
+  --fondo: #0b0a0e;
+  --superficie: #141218;
+  --superficie-2: #1c1922;
+  --superficie-3: #272230;
+
+  /* Bordes micro-contraste: estructura sin peso visual. */
+  --borde: rgb(237 237 233 / 0.08);
+  --borde-fuerte: rgb(237 237 233 / 0.14);
+  --borde-modal: rgb(237 237 233 / 0.2);
+
+  /* Blanco roto del logo. */
+  --texto: #edede9;
+  --texto-suave: #9a94a3;
+
+  /*
+   * Púrpura de marca: acciones, series validadas y métricas focales.
+   *
+   * Son dos tonos y no uno por contraste: sobre el púrpura pleno se lee bien
+   * el blanco roto (4,8:1), pero ese mismo púrpura como TEXTO sobre el carbón
+   * se queda en 4:1 y no llega. Para texto se usa el tono claro (7,8:1).
+   */
+  --acento: #9013e8;
+  --acento-presion: #7a0fc4;
+  --acento-tinta: #edede9;
+  --acento-texto: #c08cf7;
+
+  /* Azul: analítica, progresión y RPE. Nunca acciones. */
+  --info: #4d8df6;
+  --info-tinta: #f7f5fb;
+
+  --exito: #43d17a;
+  --aviso: #ffb547;
+  --peligro: #ff646c;
+
+  --sombra-modal: 0 8px 24px rgb(0 0 0 / 0.6);
+  --brillo-activo: 0 0 12px rgb(144 19 232 / 0.28);
+
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  /* El blanco roto del logo es el lienzo; el carbón del logo, el texto. */
+  --fondo: #edede9;
+  --superficie: #ffffff;
+  --superficie-2: #f3f3f0;
+  --superficie-3: #e4e3df;
+
+  --borde: rgb(63 63 63 / 0.12);
+  --borde-fuerte: rgb(63 63 63 / 0.2);
+  --borde-modal: rgb(63 63 63 / 0.28);
+
+  --texto: #3f3f3f;
+  --texto-suave: #6d6a72;
+
+  /* El púrpura pleno sobre blanco se queda corto: para texto se oscurece. */
+  --acento: #8b1fd6;
+  --acento-presion: #7517b5;
+  --acento-tinta: #faf7fe;
+  --acento-texto: #7517b5;
+
+  --info: #2f5fd0;
+  --info-tinta: #f7f5fb;
+
+  --exito: #157f45;
+  --aviso: #a86200;
+  --peligro: #c4303a;
+
+  --sombra-modal: 0 8px 24px rgb(63 63 63 / 0.18);
+  --brillo-activo: 0 0 0 1px rgb(139 31 214 / 0.3);
+
+  color-scheme: light;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-superficie-2: var(--superficie-2);
+  --color-superficie-3: var(--superficie-3);
+  --color-borde: var(--borde);
+  --color-borde-fuerte: var(--borde-fuerte);
+  --color-texto: var(--texto);
+  --color-suave: var(--texto-suave);
+  --color-acento: var(--acento);
+  --color-acento-texto: var(--acento-texto);
+  --color-tinta: var(--acento-tinta);
+  --color-info: var(--info);
+  --color-peligro: var(--peligro);
+  --color-exito: var(--exito);
+  --color-aviso: var(--aviso);
+
+  /* Space Grotesk para cifras y titulares; Geist para todo lo que se lee. */
+  --font-display: var(--font-space-grotesk), system-ui, sans-serif;
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/*
+ * Reseteos. Van dentro de `@layer base` a propósito: en Tailwind v4 el CSS que
+ * queda FUERA de una capa gana a todas las utilidades, así que un reseteo
+ * suelto anularía silenciosamente cualquier `text-*` o `bg-*`.
+ */
+@layer base {
+  html,
+  body {
+    background: var(--fondo);
+    color: var(--texto);
+  }
+
+  body {
+    font-family: var(--font-geist-sans), system-ui, sans-serif;
+    padding-top: env(safe-area-inset-top);
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/*
+ * Escala tipográfica.
+ *
+ * Las cifras van siempre en `tabular-nums`: sin ancho fijo, un cronómetro o un
+ * contador de repeticiones "baila" al cambiar de dígito y obliga a releer.
+ */
+@utility display-hero {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 44px;
+  line-height: 48px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+@utility metrica {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 32px;
+  line-height: 36px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility metrica-xl {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 56px;
+  line-height: 58px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility titulo-lg {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+@utility titulo-md {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+@utility titulo-sm {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+/* Etiquetas meta: SERIE, CARGA, REPS, KG, RPE. */
+@utility etiqueta-caps {
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@utility etiqueta-md {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* Objetivo táctil mínimo: se usa con una mano, sudado y con prisa. */
+@utility tactil {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+@utility sin-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* La serie que toca ahora: hairline púrpura y halo, para no dudar dónde escribir. */
+@utility serie-activa {
+  border-color: rgb(144 19 232 / 0.5);
+  box-shadow: var(--brillo-activo);
+}
+
+/*
+ * Evita el zoom automático de iOS al enfocar un campo. Esta sí se deja fuera de
+ * capa aposta: debe ganar a cualquier `text-sm` que se le ponga al campo, o el
+ * móvil hará zoom al tocarlo.
+ */
+input,
+select,
+textarea {
+  font-size: max(16px, 1em);
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes latido {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes pulso {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@utility animar-aparecer {
+  animation: aparecer 0.18s ease-out both;
+}
+
+@utility animar-subir {
+  animation: subir 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility animar-latido {
+  animation: latido 0.6s ease-in-out 2;
+}
+
+@utility animar-pulso {
+  animation: pulso 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
