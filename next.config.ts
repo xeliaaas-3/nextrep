@@ -23,6 +23,12 @@ const nextConfig: NextConfig = {
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          // Nadie debe poder meter la app en un iframe ajeno y hacerte pulsar
+          // cosas sin que lo sepas. Solo en producción: en desarrollo la vista
+          // previa embebida con la que se prueba dejaría de funcionar.
+          ...(process.env.NODE_ENV === "production"
+            ? [{ key: "X-Frame-Options", value: "DENY" }]
+            : []),
         ],
       },
     ];
