@@ -100,10 +100,10 @@ export function HojaMedia({
   const notasEnEdicion = notas ?? media?.notes ?? "";
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/70">
-      <button type="button" aria-label="Cerrar" className="flex-1" onClick={alCerrar} />
+    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/70 lg:items-center lg:justify-center lg:p-6">
+      <button type="button" aria-label="Cerrar" className="flex-1 lg:absolute lg:inset-0" onClick={alCerrar} />
 
-      <div className="animar-subir flex max-h-[88vh] flex-col rounded-t-2xl border-t border-borde-fuerte bg-superficie-2 shadow-[var(--sombra-modal)]">
+      <div className="animar-subir flex max-h-[88vh] flex-col rounded-t-2xl border-t lg:w-full lg:max-w-lg lg:rounded-2xl lg:border border-borde-fuerte bg-superficie-2 shadow-[var(--sombra-modal)]">
         <div className="flex items-center gap-2 border-b border-borde px-4 py-3">
           <div className="min-w-0 flex-1">
             <Rotulo>Referencia de técnica</Rotulo>

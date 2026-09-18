@@ -3,7 +3,9 @@ import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ArranqueApp } from "@/components/ArranqueApp";
 import { NavegacionInferior } from "@/components/NavegacionInferior";
+import { NavegacionLateral } from "@/components/NavegacionLateral";
 import { ProveedorAvisos } from "@/components/Avisos";
+import { SCRIPT_TEMA } from "@/lib/tema";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -45,14 +47,30 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        {/*
+          Aplica el tema antes de pintar. Sin esto la app arranca en oscuro y
+          salta al claro en cuanto IndexedDB responde.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
+      </head>
       <body className="flex min-h-full flex-col bg-fondo text-texto">
         <ProveedorAvisos>
           <ArranqueApp />
+          <NavegacionLateral />
+
           {/*
-            Columna de 480px: por encima de ese ancho la app no se estira, para
-            que el alcance del pulgar sea el mismo en móvil, tablet y escritorio.
+            En móvil, columna de 480px: el alcance del pulgar es el mismo en
+            cualquier teléfono. En escritorio se reserva el hueco de la barra
+            lateral y la columna se ensancha, porque ahí no manda el pulgar y
+            dejar media pantalla vacía no aporta nada.
           */}
-          <main className="mx-auto w-full max-w-[480px] flex-1 pb-28">{children}</main>
+          <div className="flex-1 lg:pl-60">
+            <main className="mx-auto w-full max-w-[480px] pb-28 lg:max-w-4xl lg:pb-12">
+              {children}
+            </main>
+          </div>
+
           <NavegacionInferior />
         </ProveedorAvisos>
       </body>

@@ -38,15 +38,15 @@ export function SelectorEjercicio({
   const visibles = (resultados ?? []).filter((e) => !excluir.includes(e.id));
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/60">
+    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/60 lg:items-center lg:justify-center lg:p-6">
       <button
         type="button"
         aria-label="Cerrar"
-        className="flex-1"
+        className="flex-1 lg:absolute lg:inset-0"
         onClick={alCerrar}
       />
 
-      <div className="animar-subir flex max-h-[85vh] flex-col rounded-t-2xl border-t border-borde bg-superficie">
+      <div className="animar-subir flex max-h-[85vh] flex-col rounded-t-2xl border-t lg:w-full lg:max-w-lg lg:rounded-2xl lg:border border-borde bg-superficie">
         <div className="flex items-center gap-2 border-b border-borde px-4 py-3">
           <h2 className="flex-1 text-lg font-semibold">Elegir ejercicio</h2>
           <button

@@ -102,8 +102,8 @@ export default function PaginaHoy() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 mb-3 flex items-center gap-2 border-b border-borde bg-fondo/90 px-4 py-3 backdrop-blur-xl">
-        <Logo size={26} />
+      <header className="sticky top-0 z-30 mb-3 flex items-center gap-2 border-b border-borde bg-fondo/90 px-4 py-3 backdrop-blur-xl lg:py-5">
+        <Logo size={26} className="lg:hidden" />
         <h1 className="titulo-sm flex-1 uppercase tracking-tight text-suave">Hoy</h1>
         {/*
           El aviso solo aparece cuando de verdad no hay red. Una píldora fija
@@ -113,7 +113,13 @@ export default function PaginaHoy() {
         {!enLinea && <Pip tono="aviso">Sin conexión</Pip>}
       </header>
 
-      <div className="space-y-3 px-4">
+      {/*
+        En escritorio pasa a dos columnas: la acción de hoy a la izquierda, y
+        el seguimiento (semana, métricas, últimos entrenos) a la derecha, para
+        no obligar a desplazarse por lo que cabe de un vistazo.
+      */}
+      <div className="px-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-4">
+        <div className="space-y-3">
         {/* Acción principal */}
         {activa ? (
           <Tarjeta className="serie-activa">
@@ -169,6 +175,9 @@ export default function PaginaHoy() {
           </div>
         )}
 
+        </div>
+
+        <div className="mt-3 space-y-3 lg:mt-0">
         {/* Semana y racha */}
         <Tarjeta>
           <div className="mb-3 flex items-center justify-between gap-2">
@@ -290,6 +299,7 @@ export default function PaginaHoy() {
             </ul>
           </section>
         )}
+        </div>
       </div>
     </>
   );

@@ -56,7 +56,7 @@ export default function PaginaMas() {
     <>
       <Cabecera titulo="Más" />
 
-      <div className="space-y-3 px-4">
+      <div className="space-y-3 px-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-3 lg:space-y-0">
         <Tarjeta>
           <Rotulo>Desde que empezaste</Rotulo>
           <dl className="mt-3 grid grid-cols-3 gap-3 text-center">

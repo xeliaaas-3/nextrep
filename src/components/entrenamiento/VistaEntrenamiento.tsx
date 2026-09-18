@@ -431,8 +431,14 @@ export function VistaEntrenamiento({ sessionId }: { sessionId: UUID }) {
         </div>
       ) : (
         <>
+          {/*
+            En escritorio, ficha a la izquierda y series a la derecha: la tabla
+            estirada a todo lo ancho se lee peor, y así se ve el ejercicio y lo
+            que llevas hecho sin desplazarse.
+          */}
+          <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-start lg:gap-4 lg:px-4">
           {/* Cabecera del ejercicio */}
-          <section className="mx-4 mb-3 rounded-lg border border-borde bg-superficie p-4">
+          <section className="mx-4 mb-3 rounded-lg border border-borde bg-superficie p-4 lg:mx-0">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <Rotulo className="text-info">
@@ -520,6 +526,7 @@ export function VistaEntrenamiento({ sessionId }: { sessionId: UUID }) {
             </p>
           </section>
 
+          <div>
           <TablaSeries
             seriesHechas={seriesActivas}
             filasTotales={filasAMostrar}
@@ -541,7 +548,7 @@ export function VistaEntrenamiento({ sessionId }: { sessionId: UUID }) {
           />
 
           {/* Salto entre ejercicios */}
-          <nav className="mt-3 grid grid-cols-2 gap-2 px-4">
+          <nav className="mt-3 grid grid-cols-2 gap-2 px-4 lg:px-0">
             <button
               type="button"
               disabled={indiceActivo === 0}
@@ -578,6 +585,8 @@ export function VistaEntrenamiento({ sessionId }: { sessionId: UUID }) {
               <IconoAdelante width={18} height={18} className="shrink-0 text-suave" />
             </button>
           </nav>
+          </div>
+          </div>
         </>
       )}
 

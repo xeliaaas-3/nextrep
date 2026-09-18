@@ -114,7 +114,7 @@ export function Cabecera({
   const router = useRouter();
 
   return (
-    <header className="sticky top-0 z-30 mb-3 flex items-center gap-2 border-b border-borde bg-fondo/90 px-4 py-3 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 mb-3 flex items-center gap-2 border-b border-borde bg-fondo/90 px-4 py-3 backdrop-blur-xl lg:py-5">
       {atras !== undefined &&
         (atras === true ? (
           <button

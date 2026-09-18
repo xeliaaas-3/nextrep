@@ -144,7 +144,7 @@ export function DetalleSesion({ sessionId }: { sessionId: UUID }) {
         )}
 
         {/* Telemetría de la sesión */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Tarjeta>
             <Rotulo>Duración</Rotulo>
             <p className="metrica mt-1">

@@ -146,10 +146,10 @@ export function EditorDeSerie({
         veces.
       */}
       <div
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-borde bg-superficie/95 backdrop-blur-xl"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-borde bg-superficie/95 backdrop-blur-xl lg:pl-60"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <div className="mx-auto max-w-[480px] space-y-2 p-3">
+        <div className="mx-auto max-w-[480px] space-y-2 p-3 lg:max-w-4xl">
           {barraSuperior}
 
           <button

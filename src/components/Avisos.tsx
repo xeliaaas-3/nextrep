@@ -75,7 +75,7 @@ export function ProveedorAvisos({ children }: { children: ReactNode }) {
       <div
         // Arriba y no abajo: la zona inferior la ocupan el botón de completar
         // serie y la barra de navegación, que son lo último que hay que tapar.
-        className="pointer-events-none fixed inset-x-0 top-0 z-60 flex flex-col items-center gap-2 px-4"
+        className="pointer-events-none fixed inset-x-0 top-0 z-60 flex flex-col items-center gap-2 px-4 lg:pl-60"
         style={{ paddingTop: "calc(env(safe-area-inset-top) + 0.75rem)" }}
         role="status"
         aria-live="polite"

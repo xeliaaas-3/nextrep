@@ -42,7 +42,7 @@ export function TablaSeries({
   alAnadirFila: () => void;
 }) {
   return (
-    <section className="px-4">
+    <section className="px-4 lg:px-0">
       <div className="mb-2 grid grid-cols-[2.5rem_4rem_1fr_3.5rem_3rem] items-center gap-2 px-2">
         <span className="etiqueta-caps text-suave">Serie</span>
         <span className="etiqueta-caps text-suave">Tipo</span>
