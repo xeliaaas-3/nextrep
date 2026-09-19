@@ -6,7 +6,7 @@
  * viven en IndexedDB, que ya es la fuente de verdad.
  */
 
-const CACHE = "gym-v1";
+const CACHE = "gym-v2";
 
 const ESENCIALES = [
   "/",
@@ -14,6 +14,7 @@ const ESENCIALES = [
   "/rutinas",
   "/progreso",
   "/historial",
+  "/mas",
   "/ajustes",
   "/ejercicios",
   "/manifest.webmanifest",
