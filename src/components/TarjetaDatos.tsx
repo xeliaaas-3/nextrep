@@ -62,7 +62,7 @@ export function TarjetaDatos() {
     avisar({
       mensaje: concedido
         ? "Listo: el navegador ya no borrará tus datos para hacer sitio"
-        : "El navegador no lo ha concedido. Instala la app y vuelve a intentarlo.",
+        : "El navegador no lo ha concedido. Suele darlo cuando instalas la app o la visitas a menudo.",
       tono: concedido ? "exito" : "neutro",
     });
   }
@@ -133,10 +133,22 @@ export function TarjetaDatos() {
           <p className="titulo-sm">
             {persistente ? "Almacenamiento protegido" : "Almacenamiento sin proteger"}
           </p>
+
+          {/*
+            El texto cambia según el navegador porque la realidad cambia. En
+            WebKit (iPhone y iPad) `persist()` devuelve `false` siempre: no hay
+            botón que valga, la durabilidad se consigue instalando la app. Dar
+            ahí un botón que no puede funcionar solo hace que lo pulses dos
+            veces y desconfíes del resto.
+          */}
           <p className="mt-1 text-sm text-suave">
-            {persistente
-              ? "Tus entrenamientos sobreviven a cerrar el navegador y solo se borran si los borras tú."
-              : "Se guardan en este navegador y sobreviven a reiniciarlo, pero el navegador puede borrarlos si necesita espacio."}
+            {persistente && estado?.esWebKitMovil
+              ? "Al estar instalada en la pantalla de inicio, el sistema no borra sus datos por falta de uso."
+              : persistente
+                ? "Tus entrenamientos sobreviven a cerrar el navegador y solo se borran si los borras tú."
+                : estado?.esWebKitMovil
+                  ? "Safari borra los datos de las webs que no abres durante unos días. Añade NextRep a tu pantalla de inicio y deja de caducar."
+                  : "Se guardan en este navegador y sobreviven a reiniciarlo, pero el navegador puede borrarlos si necesita espacio."}
           </p>
 
           {estado?.usadoBytes != null && (
@@ -146,7 +158,24 @@ export function TarjetaDatos() {
             </p>
           )}
 
-          {!persistente && estado?.soportado && (
+          {!persistente && estado?.esWebKitMovil && (
+            <ol className="mt-3 space-y-1.5 text-sm text-suave">
+              <li className="flex gap-2">
+                <span className="etiqueta-caps shrink-0 text-aviso">1</span>
+                Toca el botón de compartir de Safari, abajo.
+              </li>
+              <li className="flex gap-2">
+                <span className="etiqueta-caps shrink-0 text-aviso">2</span>
+                Elige &laquo;Añadir a pantalla de inicio&raquo;.
+              </li>
+              <li className="flex gap-2">
+                <span className="etiqueta-caps shrink-0 text-aviso">3</span>
+                Abre NextRep desde ese icono. Ahí van tus datos.
+              </li>
+            </ol>
+          )}
+
+          {!persistente && estado?.puedePedirse && (
             <Boton ancho className="mt-3" onClick={() => void protegerDatos()}>
               Proteger mis datos
             </Boton>
