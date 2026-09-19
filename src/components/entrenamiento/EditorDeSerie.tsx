@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { aKg, desdeKg, numeroCorto } from "@/lib/format";
-import type { Unit } from "@/lib/types";
+import { aKg, desdeKg, formatearSerie, numeroCorto } from "@/lib/format";
+import type { Medicion, Unit } from "@/lib/types";
 import { IconoCheck } from "../iconos";
 import { juntar } from "../ui";
 
@@ -32,6 +32,7 @@ const RPE_POSIBLES = [6, 7, 8, 9, 10] as const;
 export function EditorDeSerie({
   numero,
   unidad,
+  medicion,
   inicial,
   modo,
   barraSuperior,
@@ -40,6 +41,7 @@ export function EditorDeSerie({
 }: {
   numero: number;
   unidad: Unit;
+  medicion: Medicion;
   inicial: ValoresSerie;
   modo: "completar" | "guardar";
   /** Fila que va encima del botón: el descanso, en curso o el que se iniciará. */
@@ -49,6 +51,9 @@ export function EditorDeSerie({
 }) {
   // El paso es el salto real de disco más pequeño que se usa en un gimnasio.
   const paso = unidad === "kg" ? 2.5 : 5;
+  const porTiempo = medicion === "tiempo";
+  // En un estiramiento se ajusta de cinco en cinco segundos, no de uno en uno.
+  const pasoCantidad = porTiempo ? 5 : 1;
 
   const [peso, setPeso] = useState(() => numeroCorto(desdeKg(inicial.pesoKg, unidad)));
   const [reps, setReps] = useState(() => String(inicial.reps));
@@ -110,7 +115,8 @@ export function EditorDeSerie({
           <SelectorRPE valor={rpe} alCambiar={setRpe} />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className={juntar("grid gap-3", porTiempo ? "grid-cols-1" : "grid-cols-2")}>
+          {!porTiempo && (
           <BloqueNumero
             etiqueta={`Peso (${unidad})`}
             valor={peso}
@@ -119,12 +125,13 @@ export function EditorDeSerie({
             alSubir={() => ajustarPeso(paso)}
             modoTeclado="decimal"
           />
+          )}
           <BloqueNumero
-            etiqueta="Repeticiones"
+            etiqueta={porTiempo ? "Segundos" : "Repeticiones"}
             valor={reps}
             alEscribir={setReps}
-            alBajar={() => ajustarReps(-1)}
-            alSubir={() => ajustarReps(1)}
+            alBajar={() => ajustarReps(-pasoCantidad)}
+            alSubir={() => ajustarReps(pasoCantidad)}
             modoTeclado="numeric"
           />
         </div>
@@ -162,8 +169,13 @@ export function EditorDeSerie({
               <IconoCheck width={20} height={20} />
               {modo === "completar" ? `Completar serie ${numero}` : "Guardar cambios"}
               <span className="tabular-nums">
-                · {numeroCorto(Number.isFinite(pesoNumero) ? pesoNumero : 0)} {unidad} ×{" "}
-                {Number.isInteger(repsNumero) ? repsNumero : 0}
+                ·{" "}
+                {formatearSerie(
+                  Number.isFinite(pesoNumero) ? aKg(pesoNumero, unidad) : 0,
+                  Number.isInteger(repsNumero) ? repsNumero : 0,
+                  unidad,
+                  medicion,
+                )}
               </span>
             </span>
             <span className="text-[11px] font-medium opacity-70">

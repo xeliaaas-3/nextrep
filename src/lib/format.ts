@@ -1,4 +1,4 @@
-import type { Equipment, MuscleGroup, SetLog, Unit } from "./types";
+import type { Equipment, Medicion, MuscleGroup, SetLog, Unit } from "./types";
 
 /**
  * Presentacion. El peso SIEMPRE se guarda en kilogramos; las libras son una
@@ -68,9 +68,18 @@ export function formatearVolumen(kg: number, unidad: Unit): string {
  * Resumen de una tanda de series: `80 kg x 8, 8, 7`. Si hubo pesos distintos
  * se detalla cada serie: `80x8, 75x8, 70x6`.
  */
-export function resumenSeries(series: SetLog[], unidad: Unit): string {
+export function resumenSeries(
+  series: SetLog[],
+  unidad: Unit,
+  medicion: Medicion = "reps",
+): string {
   const efectivas = series.filter((s) => !s.isWarmup);
   if (efectivas.length === 0) return "sin series";
+
+  // Por tiempo y sin carga, lo que interesa es la duración de cada intento.
+  if (medicion === "tiempo" && efectivas.every((s) => s.weightKg <= 0)) {
+    return efectivas.map((s) => formatearSegundos(s.reps)).join(", ");
+  }
 
   const pesos = new Set(efectivas.map((s) => s.weightKg));
   if (pesos.size === 1) {
@@ -83,6 +92,33 @@ export function resumenSeries(series: SetLog[], unidad: Unit): string {
     .join(", ");
 }
 
+/** Segundos legibles: "45 s", "1:30". */
+export function formatearSegundos(segundos: number): string {
+  if (segundos < 60) return `${segundos} s`;
+  const minutos = Math.floor(segundos / 60);
+  const resto = segundos % 60;
+  return resto === 0 ? `${minutos} min` : `${minutos}:${String(resto).padStart(2, "0")}`;
+}
+
+/**
+ * Una serie en una línea, según cómo se mida el ejercicio y si lleva carga.
+ *
+ * "0 kg × 30" para un estiramiento de medio minuto no se entiende; esto
+ * produce "30 s", y si además hay peso, "20 kg · 30 s".
+ */
+export function formatearSerie(
+  pesoKg: number,
+  valor: number,
+  unidad: Unit,
+  medicion: Medicion = "reps",
+): string {
+  const cantidad = medicion === "tiempo" ? formatearSegundos(valor) : `${valor} reps`;
+  if (pesoKg <= 0) return cantidad;
+
+  const peso = formatearPeso(pesoKg, unidad);
+  return medicion === "tiempo" ? `${peso} · ${cantidad}` : `${peso} × ${valor}`;
+}
+
 const ETIQUETAS_GRUPO: Record<MuscleGroup, string> = {
   pecho: "Pecho",
   espalda: "Espalda",
@@ -92,6 +128,8 @@ const ETIQUETAS_GRUPO: Record<MuscleGroup, string> = {
   triceps: "Tríceps",
   core: "Core",
   cardio: "Cardio",
+  movilidad: "Calentamiento",
+  estiramiento: "Estiramientos",
 };
 
 export function etiquetaGrupo(grupo: MuscleGroup): string {
@@ -103,6 +141,7 @@ const ETIQUETAS_EQUIPO: Record<Equipment, string> = {
   mancuerna: "Mancuerna",
   maquina: "Máquina",
   polea: "Polea",
+  banda: "Banda elástica",
   peso_corporal: "Peso corporal",
 };
 
@@ -120,4 +159,6 @@ export const COLOR_GRUPO: Record<MuscleGroup, string> = {
   triceps: "#22d3ee",
   core: "#fb923c",
   cardio: "#f87171",
+  movilidad: "#ffb547",
+  estiramiento: "#43d17a",
 };

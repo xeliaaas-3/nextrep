@@ -28,8 +28,12 @@ import { IconoArrastrar, IconoBasura, IconoMas } from "../iconos";
 import { SelectorEjercicio } from "../SelectorEjercicio";
 import { Boton, Cabecera, Cargando, EstadoVacio, juntar } from "../ui";
 
-/** Ajustes por defecto al añadir un ejercicio nuevo a la rutina. */
+/**
+ * Ajustes por defecto al añadir un ejercicio a la rutina. Los que se miden en
+ * tiempo arrancan en segundos razonables, no en "8 repeticiones".
+ */
 const POR_DEFECTO = { targetSets: 3, repRangeMin: 8, repRangeMax: 12 };
+const POR_DEFECTO_TIEMPO = { targetSets: 2, repRangeMin: 20, repRangeMax: 45 };
 
 export function EditorRutina({ routineId }: { routineId: UUID }) {
   const userId = useUsuarioActual();
@@ -101,7 +105,7 @@ export function EditorRutina({ routineId }: { routineId: UUID }) {
     setSelectorAbierto(false);
     const fila = await repoRutinas.addExerciseToRoutine(routineId, userId, {
       exerciseId: ejercicio.id,
-      ...POR_DEFECTO,
+      ...(ejercicio.tracking === "tiempo" ? POR_DEFECTO_TIEMPO : POR_DEFECTO),
       restSeconds: defaultRestSeconds,
       notes: "",
     });
@@ -284,7 +288,8 @@ function FilaEjercicio({
             <span className="truncate font-medium">{ejercicio?.name ?? "Ejercicio"}</span>
           </span>
           <span className="block text-sm text-suave">
-            {fila.targetSets} × {fila.repRangeMin}-{fila.repRangeMax} reps ·{" "}
+            {fila.targetSets} × {fila.repRangeMin}-{fila.repRangeMax}{" "}
+            {ejercicio?.tracking === "tiempo" ? "s" : "reps"} ·{" "}
             {formatearDescanso(fila.restSeconds)} de descanso
           </span>
         </button>
@@ -315,17 +320,19 @@ function FilaEjercicio({
 
           <div className="grid grid-cols-2 gap-3">
             <Contador
-              etiqueta="Reps mín."
+              etiqueta={ejercicio?.tracking === "tiempo" ? "Seg. mín." : "Reps mín."}
               valor={fila.repRangeMin}
               min={1}
-              max={100}
+              max={600}
+              paso={ejercicio?.tracking === "tiempo" ? 5 : 1}
               alCambiar={(v) => void guardar({ repRangeMin: v })}
             />
             <Contador
-              etiqueta="Reps máx."
+              etiqueta={ejercicio?.tracking === "tiempo" ? "Seg. máx." : "Reps máx."}
               valor={fila.repRangeMax}
               min={1}
-              max={100}
+              max={600}
+              paso={ejercicio?.tracking === "tiempo" ? 5 : 1}
               alCambiar={(v) => void guardar({ repRangeMax: v })}
             />
           </div>

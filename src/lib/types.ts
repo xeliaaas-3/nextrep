@@ -19,6 +19,14 @@ export interface BaseEntity {
   deletedAt: ISODate | null;
 }
 
+/**
+ * Categorías del catálogo.
+ *
+ * No todas son grupos musculares —`cardio`, `movilidad` y `estiramiento` no lo
+ * son— pero sí son la dimensión por la que se busca y se filtra, que es para
+ * lo que sirve el campo. Van al final para que el trabajo de fuerza siga
+ * apareciendo primero en los filtros.
+ */
 export const GRUPOS_MUSCULARES = [
   "pecho",
   "espalda",
@@ -28,6 +36,8 @@ export const GRUPOS_MUSCULARES = [
   "triceps",
   "core",
   "cardio",
+  "movilidad",
+  "estiramiento",
 ] as const;
 
 export type MuscleGroup = (typeof GRUPOS_MUSCULARES)[number];
@@ -37,16 +47,28 @@ export const EQUIPOS = [
   "mancuerna",
   "maquina",
   "polea",
+  "banda",
   "peso_corporal",
 ] as const;
 
 export type Equipment = (typeof EQUIPOS)[number];
+
+/**
+ * Cómo se mide una serie de este ejercicio.
+ *
+ * Un estiramiento o una plancha se cuentan en segundos, no en repeticiones.
+ * Guardarlo en el ejercicio y no en cada serie evita tener que decidirlo una y
+ * otra vez, y permite que la interfaz ponga la etiqueta correcta.
+ */
+export type Medicion = "reps" | "tiempo";
 
 /** Catalogo de ejercicios. Compartido, no es una tabla personal. */
 export interface Exercise extends BaseEntity {
   name: string;
   muscleGroup: MuscleGroup;
   equipment: Equipment;
+  /** `undefined` en filas antiguas: se trata como "reps". */
+  tracking?: Medicion;
   isCustom: boolean;
   /** `null` para el catalogo global; el `userId` si lo creo el usuario. */
   ownerId: UUID | null;

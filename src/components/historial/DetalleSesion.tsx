@@ -3,9 +3,9 @@
 import { useRouter } from "next/navigation";
 import {
   COLOR_GRUPO,
-  desdeKg,
   etiquetaGrupo,
   formatearPeso,
+  formatearSerie,
   formatearVolumen,
   numeroCorto,
   plural,
@@ -227,7 +227,7 @@ export function DetalleSesion({ sessionId }: { sessionId: UUID }) {
         {/* Detalle serie a serie */}
         <div className="flex items-center justify-between">
           <Rotulo>Detalle de series</Rotulo>
-          <span className="etiqueta-caps text-suave">Carga y reps</span>
+          <span className="etiqueta-caps text-suave">Serie a serie</span>
         </div>
 
         {[...porEjercicio.entries()].map(([exerciseId, series], indice) => {
@@ -274,7 +274,7 @@ export function DetalleSesion({ sessionId }: { sessionId: UUID }) {
                       )}
                     </span>
                     <span className="etiqueta-md mt-0.5 block tabular-nums">
-                      {numeroCorto(desdeKg(serie.weightKg, unit))} × {serie.reps}
+                      {formatearSerie(serie.weightKg, serie.reps, unit, ejercicio?.tracking)}
                     </span>
                   </li>
                 ))}

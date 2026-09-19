@@ -1,7 +1,7 @@
 import { getExercisesForUser, seedCatalogIfEmpty } from "./repositories/exercises";
 import { seedLinksForExercises } from "./repositories/media";
 import { crearEntidad } from "./repositories/base";
-import type { Equipment, Exercise, MuscleGroup } from "./types";
+import type { Equipment, Exercise, Medicion, MuscleGroup } from "./types";
 
 /**
  * Catalogo global de ejercicios.
@@ -11,7 +11,7 @@ import type { Equipment, Exercise, MuscleGroup } from "./types";
  * cada dispositivo.
  */
 
-type Semilla = [nombre: string, grupo: MuscleGroup, equipo: Equipment];
+type Semilla = [nombre: string, grupo: MuscleGroup, equipo: Equipment, medicion?: Medicion];
 
 const CATALOGO: Semilla[] = [
   // Pecho
@@ -67,7 +67,7 @@ const CATALOGO: Semilla[] = [
   ["Press cerrado", "triceps", "barra"],
 
   // Core
-  ["Plancha", "core", "peso_corporal"],
+  ["Plancha", "core", "peso_corporal", "tiempo"],
   ["Elevación de piernas colgado", "core", "peso_corporal"],
   ["Rueda abdominal", "core", "peso_corporal"],
   ["Crunch en polea", "core", "polea"],
@@ -77,6 +77,33 @@ const CATALOGO: Semilla[] = [
   ["Bicicleta estática", "cardio", "maquina"],
   ["Remo ergómetro", "cardio", "maquina"],
   ["Elíptica", "cardio", "maquina"],
+
+  // Calentamiento y movilidad, para antes de entrenar
+  ["Saltos de tijera", "movilidad", "peso_corporal", "tiempo"],
+  ["Comba", "movilidad", "peso_corporal", "tiempo"],
+  ["Círculos de brazos", "movilidad", "peso_corporal"],
+  ["Band pull-apart", "movilidad", "banda"],
+  ["Dislocaciones de hombro con banda", "movilidad", "banda"],
+  ["Gato-camello", "movilidad", "peso_corporal"],
+  ["Rotación torácica en cuadrupedia", "movilidad", "peso_corporal"],
+  ["Balanceo de piernas", "movilidad", "peso_corporal"],
+  ["Puente de glúteos", "movilidad", "peso_corporal"],
+  ["Sentadilla profunda sostenida", "movilidad", "peso_corporal", "tiempo"],
+  ["Zancada con rotación", "movilidad", "peso_corporal"],
+  ["Caminata del oso", "movilidad", "peso_corporal", "tiempo"],
+
+  // Estiramientos, para después
+  ["Estiramiento de isquiotibiales", "estiramiento", "peso_corporal", "tiempo"],
+  ["Estiramiento de cuádriceps de pie", "estiramiento", "peso_corporal", "tiempo"],
+  ["Estiramiento de flexores de cadera", "estiramiento", "peso_corporal", "tiempo"],
+  ["Estiramiento de glúteo (figura 4)", "estiramiento", "peso_corporal", "tiempo"],
+  ["Estiramiento de gemelo en pared", "estiramiento", "peso_corporal", "tiempo"],
+  ["Estiramiento de pectoral en marco", "estiramiento", "peso_corporal", "tiempo"],
+  ["Estiramiento de dorsal colgado", "estiramiento", "peso_corporal", "tiempo"],
+  ["Estiramiento de tríceps sobre la cabeza", "estiramiento", "peso_corporal", "tiempo"],
+  ["Estiramiento de cuello lateral", "estiramiento", "peso_corporal", "tiempo"],
+  ["Torsión espinal tumbado", "estiramiento", "peso_corporal", "tiempo"],
+  ["Postura del niño", "estiramiento", "peso_corporal", "tiempo"],
 ];
 
 
@@ -158,11 +185,12 @@ export async function sembrarReferencias(userId: string): Promise<number> {
 }
 
 async function sembrar(userId: string): Promise<void> {
-  const ejercicios = CATALOGO.map(([name, muscleGroup, equipment]) =>
+  const ejercicios = CATALOGO.map(([name, muscleGroup, equipment, tracking]) =>
     crearEntidad<Exercise>({
       name,
       muscleGroup,
       equipment,
+      tracking: tracking ?? "reps",
       isCustom: false,
       ownerId: null,
     }),

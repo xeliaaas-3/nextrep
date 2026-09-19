@@ -6,7 +6,7 @@ import { mantenerPantallaEncendida, prepararAudio } from "@/lib/alerta";
 import {
   etiquetaEquipo,
   etiquetaGrupo,
-  formatearPeso,
+  formatearSerie,
   resumenSeries,
 } from "@/lib/format";
 import {
@@ -26,7 +26,7 @@ import {
   sesiones as repoSesiones,
 } from "@/lib/repositories";
 import { formatearReloj, tiempoRelativo } from "@/lib/time";
-import type { Exercise, RoutineExercise, SetLog, UUID } from "@/lib/types";
+import type { Exercise, Medicion, RoutineExercise, SetLog, UUID } from "@/lib/types";
 import { useAvisos } from "../Avisos";
 import { HojaMedia } from "../media/HojaMedia";
 import { IndicadorEnlace, MiniaturaMedia } from "../media/VisorMedia";
@@ -46,8 +46,18 @@ import { TablaSeries } from "./TablaSeries";
 import { TemporizadorDescanso } from "./TemporizadorDescanso";
 import type { ValoresSerie } from "./EditorDeSerie";
 
-/** Valores por defecto cuando el ejercicio no viene de una rutina. */
-const PLAN_LIBRE = { targetSets: 3, repRangeMin: 8, repRangeMax: 12 };
+/**
+ * Valores por defecto cuando el ejercicio no viene de una rutina.
+ *
+ * Un estiramiento no se hace "8 veces": se aguanta entre veinte segundos y
+ * tres cuartos de minuto, y con menos series.
+ */
+const PLAN_POR_REPS = { targetSets: 3, repRangeMin: 8, repRangeMax: 12 };
+const PLAN_POR_TIEMPO = { targetSets: 2, repRangeMin: 20, repRangeMax: 45 };
+
+function planLibre(medicion: Medicion) {
+  return medicion === "tiempo" ? PLAN_POR_TIEMPO : PLAN_POR_REPS;
+}
 
 /** Pasado este margen, un descanso terminado se considera de otra sesión. */
 const CADUCIDAD_DESCANSO_MS = 5 * 60 * 1000;
@@ -141,10 +151,12 @@ export function VistaEntrenamiento({ sessionId }: { sessionId: UUID }) {
       sessionId,
     );
 
+    const porDefecto = planLibre(activo.ejercicio.tracking ?? "reps");
     const sugerencia = sugerirObjetivo({
       grupo: activo.ejercicio.muscleGroup,
-      repRangeMin: activo.plan?.repRangeMin ?? PLAN_LIBRE.repRangeMin,
-      repRangeMax: activo.plan?.repRangeMax ?? PLAN_LIBRE.repRangeMax,
+      repRangeMin: activo.plan?.repRangeMin ?? porDefecto.repRangeMin,
+      repRangeMax: activo.plan?.repRangeMax ?? porDefecto.repRangeMax,
+      medicion: activo.ejercicio.tracking ?? "reps",
       historial,
     });
 
@@ -185,7 +197,7 @@ export function VistaEntrenamiento({ sessionId }: { sessionId: UUID }) {
 
   const ejerciciosHechos = ejerciciosSesion.filter(({ ejercicio, plan }) => {
     const hechas = (seriesPorEjercicio.get(ejercicio.id) ?? []).length;
-    return hechas >= (plan?.targetSets ?? PLAN_LIBRE.targetSets);
+    return hechas >= (plan?.targetSets ?? planLibre(ejercicio.tracking ?? "reps").targetSets);
   }).length;
 
   function iniciarDescanso(segundos: number) {
@@ -308,11 +320,13 @@ export function VistaEntrenamiento({ sessionId }: { sessionId: UUID }) {
   const todasDelEjercicio = activo ? (seriesPorEjercicio.get(activo.ejercicio.id) ?? []) : [];
   const calentamientosHechos = todasDelEjercicio.filter((s) => s.isWarmup);
   const seriesActivas = todasDelEjercicio.filter((s) => !s.isWarmup);
-  const objetivoSeries = activo?.plan?.targetSets ?? PLAN_LIBRE.targetSets;
+  const porDefectoActivo = planLibre(activo?.ejercicio.tracking ?? "reps");
+  const objetivoSeries = activo?.plan?.targetSets ?? porDefectoActivo.targetSets;
   const extraDelEjercicio = activo ? (seriesExtra[activo.ejercicio.id] ?? 0) : 0;
   const filasAMostrar = Math.max(objetivoSeries, seriesActivas.length + 1) + extraDelEjercicio;
 
   const sugerencia = contexto?.sugerencia;
+  const medicionActiva = activo?.ejercicio.tracking ?? "reps";
 
   // La rampa apunta al peso de trabajo de hoy, y solo mientras no hayas
   // empezado a hacer series efectivas: después ya no tiene sentido calentar.
@@ -321,6 +335,7 @@ export function VistaEntrenamiento({ sessionId }: { sessionId: UUID }) {
       ? sugerirCalentamiento({
           pesoObjetivoKg: sugerencia?.weightKg ?? 0,
           equipo: activo.ejercicio.equipment,
+          grupo: activo.ejercicio.muscleGroup,
         }).filter(
           (paso) => !calentamientosHechos.some((s) => Math.abs(s.weightKg - paso.pesoKg) < 0.01),
         )
@@ -345,7 +360,7 @@ export function VistaEntrenamiento({ sessionId }: { sessionId: UUID }) {
           ultimaDeLaSesion?.reps ??
           sugerencia?.reps ??
           activo?.plan?.repRangeMin ??
-          PLAN_LIBRE.repRangeMin,
+          porDefectoActivo.repRangeMin,
         rpe: null,
         esCalentamiento: false,
       };
@@ -421,7 +436,8 @@ export function VistaEntrenamiento({ sessionId }: { sessionId: UUID }) {
         <div className="sin-scrollbar flex gap-2 overflow-x-auto px-4 py-3">
           {ejerciciosSesion.map(({ ejercicio, plan }, indice) => {
             const hechas = (seriesPorEjercicio.get(ejercicio.id) ?? []).length;
-            const objetivo = plan?.targetSets ?? PLAN_LIBRE.targetSets;
+            const objetivo =
+              plan?.targetSets ?? planLibre(ejercicio.tracking ?? "reps").targetSets;
             const completo = hechas >= objetivo;
 
             return (
@@ -521,7 +537,7 @@ export function VistaEntrenamiento({ sessionId }: { sessionId: UUID }) {
               <p className="mt-3 rounded border border-borde bg-superficie-2 px-3 py-2 text-sm text-suave">
                 Última vez:{" "}
                 <span className="font-semibold text-texto">
-                  {resumenSeries(contexto.ultima.series, unit)}
+                  {resumenSeries(contexto.ultima.series, unit, medicionActiva)}
                 </span>{" "}
                 · {tiempoRelativo(contexto.ultima.fecha)}
               </p>
@@ -552,7 +568,7 @@ export function VistaEntrenamiento({ sessionId }: { sessionId: UUID }) {
                           : "Mantener"}
                     </span>
                     <span className="titulo-sm tabular-nums">
-                      {formatearPeso(sugerencia.weightKg, unit)} × {sugerencia.reps}
+                      {formatearSerie(sugerencia.weightKg, sugerencia.reps, unit, medicionActiva)}
                     </span>
                   </div>
                   <p className="mt-1 text-sm text-suave">{sugerencia.explicacion}</p>
@@ -564,8 +580,8 @@ export function VistaEntrenamiento({ sessionId }: { sessionId: UUID }) {
               Objetivo: {objetivoSeries} series ×{" "}
               {activo.plan
                 ? `${activo.plan.repRangeMin}-${activo.plan.repRangeMax}`
-                : `${PLAN_LIBRE.repRangeMin}-${PLAN_LIBRE.repRangeMax}`}{" "}
-              reps
+                : `${porDefectoActivo.repRangeMin}-${porDefectoActivo.repRangeMax}`}{" "}
+              {medicionActiva === "tiempo" ? "segundos" : "reps"}
             </p>
           </section>
 
@@ -582,6 +598,7 @@ export function VistaEntrenamiento({ sessionId }: { sessionId: UUID }) {
             seriesHechas={seriesActivas}
             filasTotales={filasAMostrar}
             unidad={unit}
+            medicion={medicionActiva}
             numeroActivo={seriesActivas.length + 1}
             editando={editando}
             valoresIniciales={valoresIniciales}

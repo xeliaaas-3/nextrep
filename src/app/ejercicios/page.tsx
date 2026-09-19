@@ -14,6 +14,7 @@ import {
   GRUPOS_MUSCULARES,
   type Equipment,
   type Exercise,
+  type Medicion,
   type MuscleGroup,
 } from "@/lib/types";
 
@@ -30,6 +31,7 @@ export default function PaginaEjercicios() {
   const [nombre, setNombre] = useState("");
   const [grupoNuevo, setGrupoNuevo] = useState<MuscleGroup>("pecho");
   const [equipoNuevo, setEquipoNuevo] = useState<Equipment>("barra");
+  const [medicionNueva, setMedicionNueva] = useState<Medicion>("reps");
   const [error, setError] = useState<string | undefined>();
 
   const resultados = useDatos(
@@ -50,6 +52,7 @@ export default function PaginaEjercicios() {
       name: limpio,
       muscleGroup: grupoNuevo,
       equipment: equipoNuevo,
+      tracking: medicionNueva,
     });
 
     setNombre("");
@@ -123,6 +126,32 @@ export default function PaginaEjercicios() {
                 ))}
               </select>
             </label>
+
+            <div>
+              <span className="etiqueta-caps mb-2 block text-suave">Se mide en</span>
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  ["reps", "Repeticiones"],
+                  ["tiempo", "Segundos"],
+                ] as const).map(([valor, etiqueta]) => (
+                  <button
+                    key={valor}
+                    type="button"
+                    onClick={() => setMedicionNueva(valor)}
+                    className={
+                      medicionNueva === valor
+                        ? "tactil rounded-lg border border-acento bg-acento text-sm font-medium text-tinta"
+                        : "tactil rounded-lg border border-borde text-sm text-suave"
+                    }
+                  >
+                    {etiqueta}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1.5 text-xs text-suave">
+                Los estiramientos y las planchas se miden en segundos.
+              </p>
+            </div>
 
             <div className="flex gap-2">
               <Boton className="flex-1" onClick={() => setCreando(false)}>

@@ -1,6 +1,6 @@
 import { numeroCorto } from "./format";
 import type { RendimientoPrevio } from "./repositories";
-import type { Equipment, MuscleGroup } from "./types";
+import type { Equipment, Medicion, MuscleGroup } from "./types";
 
 /**
  * Progresion sugerida.
@@ -34,6 +34,8 @@ interface ParametrosProgresion {
   grupo: MuscleGroup;
   repRangeMin: number;
   repRangeMax: number;
+  /** Cómo se mide: cambia qué significa "progresar". */
+  medicion?: Medicion;
   /** De la mas reciente a la mas antigua. */
   historial: RendimientoPrevio[];
 }
@@ -52,6 +54,7 @@ export function sugerirObjetivo({
   grupo,
   repRangeMin,
   repRangeMax,
+  medicion = "reps",
   historial,
 }: ParametrosProgresion): Sugerencia {
   const ultima = historial[0];
@@ -63,6 +66,25 @@ export function sugerirObjetivo({
       motivo: "primera-vez",
       explicacion: "Primera vez con este ejercicio: elige un peso cómodo.",
     };
+  }
+
+  if (medicion === "tiempo") {
+    const mejor = Math.max(...ultima.series.map((s) => s.reps));
+    const peso = Math.max(...ultima.series.map((s) => s.weightKg));
+
+    return mejor >= repRangeMax
+      ? {
+          weightKg: peso,
+          reps: repRangeMax,
+          motivo: "mantener",
+          explicacion: "Ya aguantas el tope: manténlo y cuida la posición.",
+        }
+      : {
+          weightKg: peso,
+          reps: Math.min(repRangeMax, mejor + 5),
+          motivo: "subir",
+          explicacion: "Aguanta cinco segundos más que la última vez.",
+        };
   }
 
   const pesoBase = Math.max(...ultima.series.map((s) => s.weightKg));
@@ -133,11 +155,15 @@ const BARRA_VACIA_KG = 20;
 export function sugerirCalentamiento({
   pesoObjetivoKg,
   equipo,
+  grupo,
 }: {
   pesoObjetivoKg: number;
   equipo: Equipment;
+  grupo?: MuscleGroup;
 }): PasoCalentamiento[] {
-  if (equipo === "peso_corporal" || pesoObjetivoKg < 30) return [];
+  // Calentar el calentamiento no tiene sentido.
+  if (grupo === "movilidad" || grupo === "estiramiento" || grupo === "cardio") return [];
+  if (equipo === "peso_corporal" || equipo === "banda" || pesoObjetivoKg < 30) return [];
 
   const pasos: PasoCalentamiento[] = [];
 

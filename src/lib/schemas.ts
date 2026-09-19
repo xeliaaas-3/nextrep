@@ -13,6 +13,7 @@ export const esquemaEjercicio = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio").max(80),
   muscleGroup: z.enum(GRUPOS_MUSCULARES),
   equipment: z.enum(EQUIPOS),
+  tracking: z.enum(["reps", "tiempo"]),
 });
 
 export type EntradaEjercicio = z.infer<typeof esquemaEjercicio>;

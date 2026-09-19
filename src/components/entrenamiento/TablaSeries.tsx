@@ -1,7 +1,7 @@
 "use client";
 
-import { desdeKg, numeroCorto } from "@/lib/format";
-import type { SetLog, Unit, UUID } from "@/lib/types";
+import { desdeKg, formatearSegundos, numeroCorto } from "@/lib/format";
+import type { Medicion, SetLog, Unit, UUID } from "@/lib/types";
 import { IconoCheck, IconoLapiz, IconoMas } from "../iconos";
 import { juntar } from "../ui";
 import { EditorDeSerie, type ValoresSerie } from "./EditorDeSerie";
@@ -17,6 +17,7 @@ export function TablaSeries({
   seriesHechas,
   filasTotales,
   unidad,
+  medicion,
   numeroActivo,
   editando,
   valoresIniciales,
@@ -30,6 +31,7 @@ export function TablaSeries({
   seriesHechas: SetLog[];
   filasTotales: number;
   unidad: Unit;
+  medicion: Medicion;
   numeroActivo: number;
   /** Id de una serie ya registrada que se está corrigiendo; `null` = la activa. */
   editando: UUID | null;
@@ -46,8 +48,12 @@ export function TablaSeries({
       <div className="mb-2 grid grid-cols-[2.5rem_4rem_1fr_3.5rem_3rem] items-center gap-2 px-2">
         <span className="etiqueta-caps text-suave">Serie</span>
         <span className="etiqueta-caps text-suave">Tipo</span>
-        <span className="etiqueta-caps text-right text-suave">Carga</span>
-        <span className="etiqueta-caps text-right text-suave">Reps</span>
+        <span className="etiqueta-caps text-right text-suave">
+          {medicion === "tiempo" ? "—" : "Carga"}
+        </span>
+        <span className="etiqueta-caps text-right text-suave">
+          {medicion === "tiempo" ? "Tiempo" : "Reps"}
+        </span>
         <span className="etiqueta-caps text-right text-suave">Estado</span>
       </div>
 
@@ -72,6 +78,7 @@ export function TablaSeries({
                   )}
                   numero={numero}
                   unidad={unidad}
+                  medicion={medicion}
                   inicial={valoresIniciales}
                   modo={esEdicion ? "guardar" : "completar"}
                   barraSuperior={barraSuperior}
@@ -91,6 +98,7 @@ export function TablaSeries({
                   serie={serie}
                   numero={numero}
                   unidad={unidad}
+                  medicion={medicion}
                   alEditar={() => alAbrirEdicion(serie.id)}
                 />
               </li>
@@ -121,11 +129,13 @@ function FilaHecha({
   serie,
   numero,
   unidad,
+  medicion,
   alEditar,
 }: {
   serie: SetLog;
   numero: number;
   unidad: Unit;
+  medicion: Medicion;
   alEditar: () => void;
 }) {
   return (
@@ -148,11 +158,19 @@ function FilaHecha({
       </span>
 
       <span className="titulo-sm text-right tabular-nums">
-        {numeroCorto(desdeKg(serie.weightKg, unidad))}
-        <span className="etiqueta-caps ml-1 text-suave">{unidad}</span>
+        {medicion === "tiempo" && serie.weightKg <= 0 ? (
+          "—"
+        ) : (
+          <>
+            {numeroCorto(desdeKg(serie.weightKg, unidad))}
+            <span className="etiqueta-caps ml-1 text-suave">{unidad}</span>
+          </>
+        )}
       </span>
 
-      <span className="titulo-sm text-right tabular-nums">{serie.reps}</span>
+      <span className="titulo-sm text-right tabular-nums">
+        {medicion === "tiempo" ? formatearSegundos(serie.reps) : serie.reps}
+      </span>
 
       <div className="flex justify-end">
         <button
