@@ -114,10 +114,13 @@ const CATALOGO: Semilla[] = [
  * de cero, no para sustituir a un vídeo propio, que es el que se ve en el
  * gimnasio sin cobertura.
  *
- * Todos se comprobaron uno a uno contra el oEmbed de YouTube: existen y
- * admiten incrustación. Los ejercicios cuyo vídeo candidato no correspondía
- * de verdad al movimiento se dejaron sin referencia a propósito: una
- * referencia equivocada es peor que ninguna.
+ * Todos se buscaron en YouTube y se comprobaron uno a uno contra su oEmbed:
+ * existen y permiten incrustarse (un vídeo con la incrustación desactivada
+ * devuelve 401 ahí, no 200). Además se revisó que el título correspondiera de
+ * verdad al movimiento: una referencia equivocada es peor que ninguna.
+ *
+ * Las máquinas de cardio —cinta, bicicleta y elíptica— se quedan sin vídeo a
+ * propósito: no tienen técnica que consultar entre series.
  */
 export const VIDEOS_CATALOGO: Record<string, string> = {
   "Press de banca": "gRVjAtPip0Y",
@@ -132,6 +135,7 @@ export const VIDEOS_CATALOGO: Record<string, string> = {
   "Remo con barra": "kBWAon7ItDw",
   "Remo con mancuerna": "pYcpY20QaE8",
   "Remo en polea baja": "GZbfZ033f74",
+  "Pullover en polea": "b85nuVcpnlo",
   "Peso muerto": "op9kVnSso6Q",
   "Sentadilla": "SW_C1A-rejs",
   "Sentadilla frontal": "uYumuL_G_V0",
@@ -158,21 +162,39 @@ export const VIDEOS_CATALOGO: Record<string, string> = {
   "Press francés": "d_KZxkY_0cM",
   "Fondos en banco": "6kALZikXxLc",
   "Extensión sobre la cabeza": "_gsUck-7M74",
+  "Press cerrado": "dlA8DTO-Zro",
   "Plancha": "pSHjTRCQxIw",
   "Elevación de piernas colgado": "hdng3Nm1x_E",
   "Rueda abdominal": "rqiTPdK1c_I",
+  "Crunch en polea": "ui3iEsYbXtI",
   "Remo ergómetro": "H0r_ZPXJLtg",
 
-  // Calentamiento y estiramientos. Muchos se quedaron sin vídeo: de los
-  // candidatos probados, la mayoría no existían o no correspondían al
-  // movimiento, y una referencia equivocada es peor que ninguna. Se pueden
-  // añadir a mano pegando un enlace desde la ficha del ejercicio.
+  // Calentamiento y movilidad
   "Saltos de tijera": "c4DAnQ6DtF8",
   "Comba": "1BZM2Vre5oc",
   "Círculos de brazos": "140RTNMciH8",
   "Gato-camello": "K9bK0BwKFjs",
   "Puente de glúteos": "wPM8icPu6H8",
+  "Band pull-apart": "DKS14AeHJgE",
+  "Dislocaciones de hombro con banda": "aXR9dM8TZvc",
+  "Rotación torácica en cuadrupedia": "oBA-lEjikKk",
+  "Balanceo de piernas": "9z4gtM0ymhQ",
+  "Sentadilla profunda sostenida": "jIyBCfCyVZU",
+  "Zancada con rotación": "47QGO_jOslI",
+  "Caminata del oso": "CqKgj_2uDoo",
+
+  // Estiramientos
   "Estiramiento de isquiotibiales": "FDwpEdxZ4H4",
+  "Estiramiento de dorsal colgado": "qlpwY6F4sfo",
+  "Estiramiento de cuádriceps de pie": "vgpx6cOBXFM",
+  "Estiramiento de flexores de cadera": "2kfJTHITa4w",
+  "Estiramiento de glúteo (figura 4)": "nj1-GzbAauI",
+  "Estiramiento de gemelo en pared": "TyZAmDcD6mM",
+  "Estiramiento de pectoral en marco": "2Z3DNkZ6V0k",
+  "Estiramiento de tríceps sobre la cabeza": "SAXzjpf_Juc",
+  "Estiramiento de cuello lateral": "dx-zSyVV6OU",
+  "Torsión espinal tumbado": "xMv5ltzf__M",
+  "Postura del niño": "CLlAUN_r75k",
 };
 
 /**
