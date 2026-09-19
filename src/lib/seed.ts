@@ -1,4 +1,4 @@
-import { getExercisesForUser, seedCatalogIfEmpty } from "./repositories/exercises";
+import { getExercisesForUser, syncCatalog } from "./repositories/exercises";
 import { seedLinksForExercises } from "./repositories/media";
 import { crearEntidad } from "./repositories/base";
 import type { Equipment, Exercise, Medicion, MuscleGroup } from "./types";
@@ -162,14 +162,28 @@ export const VIDEOS_CATALOGO: Record<string, string> = {
   "Elevación de piernas colgado": "hdng3Nm1x_E",
   "Rueda abdominal": "rqiTPdK1c_I",
   "Remo ergómetro": "H0r_ZPXJLtg",
+
+  // Calentamiento y estiramientos. Muchos se quedaron sin vídeo: de los
+  // candidatos probados, la mayoría no existían o no correspondían al
+  // movimiento, y una referencia equivocada es peor que ninguna. Se pueden
+  // añadir a mano pegando un enlace desde la ficha del ejercicio.
+  "Saltos de tijera": "c4DAnQ6DtF8",
+  "Comba": "1BZM2Vre5oc",
+  "Círculos de brazos": "140RTNMciH8",
+  "Gato-camello": "K9bK0BwKFjs",
+  "Puente de glúteos": "wPM8icPu6H8",
+  "Estiramiento de isquiotibiales": "FDwpEdxZ4H4",
 };
 
 /**
- * Siembra el catalogo la primera vez que se abre la app.
+ * Pone el catalogo al dia cada vez que arranca la app.
  *
- * Es idempotente y a prueba de llamadas simultaneas: la promesa se guarda para
- * que dos montajes seguidos compartan el mismo trabajo, y el repositorio
- * comprueba e inserta dentro de una sola transaccion.
+ * Se ejecuta siempre, no solo la primera vez: asi los ejercicios que se anadan
+ * en futuras versiones aparecen sin que haya que reinstalar nada. El
+ * repositorio compara por nombre, de modo que llamarlo mil veces no duplica.
+ *
+ * Es a prueba de llamadas simultaneas: la promesa se guarda para que dos
+ * montajes seguidos compartan el mismo trabajo.
  */
 let siembra: Promise<void> | null = null;
 
@@ -196,9 +210,12 @@ async function sembrar(userId: string): Promise<void> {
     }),
   );
 
-  const sembrado = await seedCatalogIfEmpty(ejercicios);
+  const { anadidos } = await syncCatalog(ejercicios);
 
-  // Las referencias solo se crean junto al catálogo, no en cada arranque: si
-  // borras una, no debe reaparecer sola al abrir la app.
-  if (sembrado) await seedLinksForExercises(userId, VIDEOS_CATALOGO, ejercicios);
+  // Solo se crean referencias para los ejercicios recien anadidos. Si se
+  // hiciera para todos, una referencia que hayas borrado reaparecería en el
+  // siguiente arranque.
+  if (anadidos.length > 0) {
+    await seedLinksForExercises(userId, VIDEOS_CATALOGO, anadidos);
+  }
 }

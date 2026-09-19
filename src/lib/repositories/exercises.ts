@@ -84,18 +84,66 @@ export async function deleteCustomExercise(id: UUID, userId: UUID): Promise<void
   await db.exercises.update(id, marcarBorrado<Exercise>());
 }
 
+export interface ResultadoCatalogo {
+  /** Los que no existian y se acaban de crear. */
+  anadidos: Exercise[];
+  /** Cuantos ya existian pero tenian datos desactualizados. */
+  actualizados: number;
+}
+
 /**
- * Siembra el catalogo global si la tabla esta vacia.
+ * Pone el catalogo global al dia, sin borrar nada.
  *
- * La comprobacion y la insercion van dentro de la MISMA transaccion: en
- * desarrollo React monta los efectos dos veces y, si se comprueba fuera, las
- * dos llamadas ven la tabla vacia y el catalogo acaba duplicado.
+ * No basta con sembrar cuando la tabla esta vacia: quien ya tenia la app
+ * instalada nunca veria los ejercicios que se anadan despues. Aqui se comparan
+ * por nombre y se crean solo los que faltan, asi que al actualizar la app el
+ * catalogo crece solo y sin duplicados.
+ *
+ * Tambien corrige los que existan con datos viejos —por ejemplo la plancha,
+ * que estaba como ejercicio de repeticiones y se mide en segundos—, pero solo
+ * en las filas globales: los ejercicios que haya creado el usuario no se tocan.
+ *
+ * Todo dentro de una transaccion: en desarrollo React monta los efectos dos
+ * veces y, si se comprueba fuera, las dos llamadas ven la tabla vacia y el
+ * catalogo acaba duplicado.
  */
-export async function seedCatalogIfEmpty(ejercicios: Exercise[]): Promise<boolean> {
+export async function syncCatalog(ejercicios: Exercise[]): Promise<ResultadoCatalogo> {
   return db.transaction("rw", db.exercises, async () => {
-    if ((await db.exercises.count()) > 0) return false;
-    await db.exercises.bulkAdd(ejercicios);
-    return true;
+    const existentes = await db.exercises.filter((e) => e.ownerId === null).toArray();
+    const porNombre = new Map(existentes.map((e) => [e.name, e]));
+
+    const anadidos: Exercise[] = [];
+    const cambios: { id: UUID; datos: Partial<Exercise> }[] = [];
+
+    for (const definicion of ejercicios) {
+      const actual = porNombre.get(definicion.name);
+
+      if (!actual) {
+        anadidos.push(definicion);
+        continue;
+      }
+
+      const desactualizado =
+        actual.muscleGroup !== definicion.muscleGroup ||
+        actual.equipment !== definicion.equipment ||
+        (actual.tracking ?? "reps") !== (definicion.tracking ?? "reps");
+
+      if (desactualizado) {
+        cambios.push({
+          id: actual.id,
+          datos: marcarCambio<Exercise>({
+            muscleGroup: definicion.muscleGroup,
+            equipment: definicion.equipment,
+            tracking: definicion.tracking,
+          }),
+        });
+      }
+    }
+
+    if (anadidos.length > 0) await db.exercises.bulkAdd(anadidos);
+    await Promise.all(cambios.map(({ id, datos }) => db.exercises.update(id, datos)));
+
+    return { anadidos, actualizados: cambios.length };
   });
 }
 
