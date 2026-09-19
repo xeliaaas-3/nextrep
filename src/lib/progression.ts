@@ -1,6 +1,6 @@
 import { numeroCorto } from "./format";
 import type { RendimientoPrevio } from "./repositories";
-import type { MuscleGroup } from "./types";
+import type { Equipment, MuscleGroup } from "./types";
 
 /**
  * Progresion sugerida.
@@ -107,4 +107,66 @@ function fallosConsecutivos(historial: RendimientoPrevio[], repRangeMin: number)
     cuenta += 1;
   }
   return cuenta;
+}
+
+/** Un escalón de calentamiento antes de la primera serie efectiva. */
+export interface PasoCalentamiento {
+  pesoKg: number;
+  reps: number;
+  /** Qué es ese escalón: "Barra vacía", "50%"... */
+  etiqueta: string;
+}
+
+/** Barra olímpica estándar. El primer escalón de cualquier rampa con barra. */
+const BARRA_VACIA_KG = 20;
+
+/**
+ * Rampa de calentamiento hasta el peso de trabajo.
+ *
+ * Se sube en porcentajes bajando las repeticiones: lo justo para preparar el
+ * patrón y las articulaciones sin llegar cansado a la primera serie efectiva.
+ *
+ * Devuelve una lista vacía cuando no hace falta: peso corporal, cargas
+ * ligeras o un objetivo que ya está cerca de la barra vacía. Proponer
+ * calentamiento para unas elevaciones laterales de 8 kg es ruido.
+ */
+export function sugerirCalentamiento({
+  pesoObjetivoKg,
+  equipo,
+}: {
+  pesoObjetivoKg: number;
+  equipo: Equipment;
+}): PasoCalentamiento[] {
+  if (equipo === "peso_corporal" || pesoObjetivoKg < 30) return [];
+
+  const pasos: PasoCalentamiento[] = [];
+
+  // Con barra se empieza siempre por la barra sola, que ya son 20 kg.
+  if (equipo === "barra" && pesoObjetivoKg >= BARRA_VACIA_KG * 2) {
+    pasos.push({ pesoKg: BARRA_VACIA_KG, reps: 8, etiqueta: "Barra vacía" });
+  }
+
+  const escalones: [porcentaje: number, reps: number][] =
+    pesoObjetivoKg >= 60
+      ? [
+          [0.5, 5],
+          [0.7, 3],
+          [0.85, 2],
+        ]
+      : [
+          [0.5, 6],
+          [0.75, 3],
+        ];
+
+  for (const [porcentaje, reps] of escalones) {
+    const pesoKg = redondearPeso(pesoObjetivoKg * porcentaje);
+
+    // Un escalón que no supera al anterior no aporta nada.
+    const anterior = pasos.at(-1)?.pesoKg ?? 0;
+    if (pesoKg <= anterior || pesoKg >= pesoObjetivoKg) continue;
+
+    pasos.push({ pesoKg, reps, etiqueta: `${Math.round(porcentaje * 100)}%` });
+  }
+
+  return pasos;
 }

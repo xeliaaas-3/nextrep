@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useAjustes, useUsuarioActual } from "@/lib/hooks";
 import { ajustes as repoAjustes } from "@/lib/repositories";
 import { sembrarCatalogo } from "@/lib/seed";
+import { pedirAlmacenamientoPersistente } from "@/lib/almacenamiento";
 import { CLAVE_TEMA } from "@/lib/tema";
 
 /**
@@ -22,6 +23,11 @@ export function ArranqueApp() {
     // reactiva: Dexie no permite escribir dentro de un `liveQuery`.
     void sembrarCatalogo(userId);
     void repoAjustes.ensureSettings(userId);
+
+    // Pedir persistencia al arrancar: los navegadores que la conceden por
+    // heurística (app instalada, visitas frecuentes) lo hacen sin preguntar.
+    // Si hace falta permiso explícito, se pide desde la pantalla "Más".
+    void pedirAlmacenamientoPersistente();
   }, [userId]);
 
   useEffect(() => {

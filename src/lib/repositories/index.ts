@@ -14,6 +14,7 @@ export * as records from "./personalRecords";
 export * as ajustes from "./settings";
 export * as estadisticas from "./stats";
 export * as media from "./media";
+export * as respaldo from "./respaldo";
 
 export type { RendimientoPrevio } from "./setLogs";
 export type { VolumenPorGrupo, ResumenSesion } from "./stats";

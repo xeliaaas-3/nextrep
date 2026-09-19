@@ -10,6 +10,7 @@ import {
   IconoMancuerna,
   IconoVideo,
 } from "@/components/iconos";
+import { TarjetaDatos } from "@/components/TarjetaDatos";
 import { Boton, Cabecera, Cargando, Rotulo, Tarjeta } from "@/components/ui";
 import { formatearVolumen, plural } from "@/lib/format";
 import { useAjustes, useDatos, useUsuarioActual } from "@/lib/hooks";
@@ -95,6 +96,8 @@ export default function PaginaMas() {
           titulo="Ajustes"
           detalle="Unidad, descanso, tema y avisos"
         />
+
+        <TarjetaDatos />
 
         <Tarjeta>
           <div className="flex items-start gap-3">

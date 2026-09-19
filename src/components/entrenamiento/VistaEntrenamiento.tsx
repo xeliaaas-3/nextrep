@@ -16,7 +16,7 @@ import {
   useTicker,
   useUsuarioActual,
 } from "@/lib/hooks";
-import { sugerirObjetivo } from "@/lib/progression";
+import { sugerirCalentamiento, sugerirObjetivo, type PasoCalentamiento } from "@/lib/progression";
 import {
   ejercicios as repoEjercicios,
   media as repoMedia,
@@ -26,7 +26,7 @@ import {
   sesiones as repoSesiones,
 } from "@/lib/repositories";
 import { formatearReloj, tiempoRelativo } from "@/lib/time";
-import type { Exercise, RoutineExercise, UUID } from "@/lib/types";
+import type { Exercise, RoutineExercise, SetLog, UUID } from "@/lib/types";
 import { useAvisos } from "../Avisos";
 import { HojaMedia } from "../media/HojaMedia";
 import { IndicadorEnlace, MiniaturaMedia } from "../media/VisorMedia";
@@ -41,6 +41,7 @@ import {
 } from "../iconos";
 import { SelectorEjercicio } from "../SelectorEjercicio";
 import { Barra, Boton, Cargando, juntar, Rotulo } from "../ui";
+import { Calentamiento } from "./Calentamiento";
 import { TablaSeries } from "./TablaSeries";
 import { TemporizadorDescanso } from "./TemporizadorDescanso";
 import type { ValoresSerie } from "./EditorDeSerie";
@@ -199,7 +200,11 @@ export function VistaEntrenamiento({ sessionId }: { sessionId: UUID }) {
     // El toque que confirma la serie es el gesto que nos deja usar audio luego.
     prepararAudio();
 
-    const yaHechas = seriesPorEjercicio.get(activo.ejercicio.id) ?? [];
+    // Solo cuentan las del mismo tipo: si no, la serie 1 efectiva saldría
+    // numerada como la 5 por haber calentado cuatro veces.
+    const yaHechas = (seriesPorEjercicio.get(activo.ejercicio.id) ?? []).filter(
+      (s) => s.isWarmup === valores.esCalentamiento,
+    );
     const serie = await repoSeries.logSet(userId, {
       sessionId,
       exerciseId: activo.ejercicio.id,
@@ -219,6 +224,30 @@ export function VistaEntrenamiento({ sessionId }: { sessionId: UUID }) {
     if (!valores.esCalentamiento) {
       iniciarDescanso(activo.plan?.restSeconds ?? defaultRestSeconds);
     }
+  }
+
+  async function registrarCalentamiento(paso: PasoCalentamiento) {
+    if (!activo) return;
+    prepararAudio();
+
+    const yaHechas = (seriesPorEjercicio.get(activo.ejercicio.id) ?? []).filter(
+      (s) => s.isWarmup,
+    );
+    await repoSeries.logSet(userId, {
+      sessionId,
+      exerciseId: activo.ejercicio.id,
+      setNumber: yaHechas.length + 1,
+      weightKg: paso.pesoKg,
+      reps: paso.reps,
+      rpe: null,
+      isWarmup: true,
+    });
+
+    // El calentamiento no descansa: se encadena con el siguiente escalón.
+  }
+
+  async function deshacerCalentamiento(serie: SetLog) {
+    await repoSeries.deleteSetLog(serie.id);
   }
 
   async function guardarEdicion(id: UUID, valores: ValoresSerie) {
@@ -276,12 +305,26 @@ export function VistaEntrenamiento({ sessionId }: { sessionId: UUID }) {
     });
   }
 
-  const seriesActivas = activo ? (seriesPorEjercicio.get(activo.ejercicio.id) ?? []) : [];
+  const todasDelEjercicio = activo ? (seriesPorEjercicio.get(activo.ejercicio.id) ?? []) : [];
+  const calentamientosHechos = todasDelEjercicio.filter((s) => s.isWarmup);
+  const seriesActivas = todasDelEjercicio.filter((s) => !s.isWarmup);
   const objetivoSeries = activo?.plan?.targetSets ?? PLAN_LIBRE.targetSets;
   const extraDelEjercicio = activo ? (seriesExtra[activo.ejercicio.id] ?? 0) : 0;
   const filasAMostrar = Math.max(objetivoSeries, seriesActivas.length + 1) + extraDelEjercicio;
 
   const sugerencia = contexto?.sugerencia;
+
+  // La rampa apunta al peso de trabajo de hoy, y solo mientras no hayas
+  // empezado a hacer series efectivas: después ya no tiene sentido calentar.
+  const pasosCalentamiento =
+    activo && seriesActivas.length === 0
+      ? sugerirCalentamiento({
+          pesoObjetivoKg: sugerencia?.weightKg ?? 0,
+          equipo: activo.ejercicio.equipment,
+        }).filter(
+          (paso) => !calentamientosHechos.some((s) => Math.abs(s.weightKg - paso.pesoKg) < 0.01),
+        )
+      : [];
   const referenciaActiva = activo ? referencias.get(activo.ejercicio.id) : undefined;
 
   // Lo que se precarga: dentro de una misma sesión manda la última serie hecha
@@ -527,6 +570,14 @@ export function VistaEntrenamiento({ sessionId }: { sessionId: UUID }) {
           </section>
 
           <div>
+          <Calentamiento
+            pasos={pasosCalentamiento}
+            hechas={calentamientosHechos}
+            unidad={unit}
+            alRegistrar={(paso) => void registrarCalentamiento(paso)}
+            alDeshacer={(serie) => void deshacerCalentamiento(serie)}
+          />
+
           <TablaSeries
             seriesHechas={seriesActivas}
             filasTotales={filasAMostrar}
